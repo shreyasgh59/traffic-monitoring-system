@@ -54,9 +54,11 @@ def annotate_frame(frame):
             _draw_box(image, coords, name, (0, 190, 0), confidence)
     if helmet_result.boxes is not None:
         for coords, class_id, confidence in zip(helmet_result.boxes.xyxy.tolist(), helmet_result.boxes.cls.int().tolist(), helmet_result.boxes.conf.tolist()):
-            label = helmet_model.names[class_id]
-            if label == "no_helmet":
+            label = str(helmet_model.names[class_id])
+            normalized_label = label.lower().replace("-", "_").replace(" ", "_")
+            if normalized_label in {"no_helmet", "without_helmet", "nohelmet"}:
                 no_helmet += 1
+                _draw_box(image, coords, "NO HELMET", (0, 0, 255), confidence)
     return image, counts, no_helmet
 
 

@@ -10,7 +10,7 @@ from django.test.utils import override_settings
 from django.urls import reverse
 from PIL import Image
 
-from .models import TrafficSummary, TrafficVideo, VehicleProfile, Violation
+from .models import AdministratorProfile, TrafficSummary, TrafficVideo, VehicleProfile, Violation
 
 
 def image_upload(name="snapshot.png"):
@@ -36,6 +36,7 @@ class TrafficMonitoringViewsTests(TestCase):
 
     def setUp(self):
         self.admin = User.objects.create_user(username="admin", password="safe-test-password", is_staff=True)
+        AdministratorProfile.objects.create(user=self.admin, unique_number="012")
         self.owner = User.objects.create_user(username="owner", password="safe-test-password")
         self.other_user = User.objects.create_user(username="other", password="safe-test-password")
         VehicleProfile.objects.create(user=self.owner, vehicle_number="KA77AB1234")
@@ -122,13 +123,15 @@ class TrafficMonitoringViewsTests(TestCase):
 
         response = self.client.post(reverse("reset_password"), {
             "email": "owner@example.com",
-            "vehicle_number": "KA00AB0000",
+            "account_type": "user",
+            "verification_number": "KA00AB0000",
         })
         self.assertContains(response, "Details do not match our records")
 
         response = self.client.post(reverse("reset_password"), {
             "email": "owner@example.com",
-            "vehicle_number": "ka 77 ab 1234",
+            "account_type": "user",
+            "verification_number": "ka 77 ab 1234",
         })
         self.assertRedirects(response, reverse("reset_password"))
 
@@ -139,6 +142,24 @@ class TrafficMonitoringViewsTests(TestCase):
         self.assertRedirects(response, reverse("login"))
         self.owner.refresh_from_db()
         self.assertTrue(self.owner.check_password("NewSafePass!123"))
+
+    def test_administrator_password_reset_requires_matching_unique_number(self):
+        self.admin.email = "admin@example.com"
+        self.admin.save(update_fields=["email"])
+
+        response = self.client.post(reverse("reset_password"), {
+            "email": "admin@example.com",
+            "account_type": "admin",
+            "verification_number": "011",
+        })
+        self.assertContains(response, "Details do not match our records")
+
+        response = self.client.post(reverse("reset_password"), {
+            "email": "admin@example.com",
+            "account_type": "admin",
+            "verification_number": "012",
+        })
+        self.assertRedirects(response, reverse("reset_password"))
 
     def test_admin_generates_timestamped_fine_report_with_snapshot(self):
         self.client.force_login(self.admin)

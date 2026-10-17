@@ -1,38 +1,63 @@
 # Traffic Monitoring System
 
-## First-time setup (Windows PowerShell)
+Traffic Monitoring System is an academic project for IT303. It gives traffic administrators a single place to review road-video uploads, monitor traffic conditions, prepare fine reports, and share current traffic status with registered users.
 
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-python manage.py makemigrations monitoring
-python manage.py migrate
-python manage.py runserver
-```
+## What the system offers
 
-Open `http://127.0.0.1:8000/`, create an account, then upload a local test video.
+- Separate administrator and registered-user accounts.
+- A traffic-operations dashboard showing the latest traffic level, visible vehicles, congestion score, recent activity, and sign-in history.
+- A Live Monitoring page where an administrator can upload road clips, choose a queued clip, connect an IP camera URL, or select a browser camera.
+- Per-video traffic reports with vehicle categories and a clear Low, Medium, or Heavy traffic status.
+- A traffic-density gauge and congestion-history chart for easy status review.
+- A fine-evidence screen for creating helmet-violation fine reports with a supporting snapshot.
+- A protected Pending Fines page where a registered user can view records for only their own vehicle.
+- Account registration, sign-in with username or email, password reset, and Terms and Conditions pages.
 
-The initial database is SQLite so the project runs immediately. To use MySQL 8, install the MySQL C connector/build tools if `mysqlclient` needs compilation, create a database, and replace the `DATABASES` value in `trafficwatch/settings.py` with the MySQL settings.
+## Who uses it
 
-## Current implementation
+### Traffic administrator
 
-- Registration and username/email sign-in, with separate administrator and user portals.
-- A normalized `registered_vehicles` registry seeded idempotently with `KA01AB1234` through `KA10AB1234`.
-- Live Monitoring starts with a blank player. Administrators select/deselect a queued clip, an IP Webcam URL, or a browser camera before it loads; selected clips provide an authenticated MJPEG feed.
-- Each uploaded clip can be analysed on demand. Per-video traffic classifications, timestamps, annotated preview frames, and congestion scores are persisted and rendered in Traffic reports.
-- Administrator-generated, timestamped helmet-violation reports with exactly one JPG/JPEG/PNG snapshot and protected vehicle-number lookup for issued fines.
+Administrators can access the control-room dashboard, add and select video sources, review traffic reports, and create fine reports. Administrator password recovery requires the registered email address and administrator unique number.
 
-## YOLO setup
+### Registered user
 
-`ultralytics` and `opencv-python` are declared in `requirements.txt`. On first analysis, Ultralytics downloads the compatible `yolo11n.pt` pretrained weight file, which requires internet access. The RTX 3050 will be used only after installing a PyTorch build that matches your CUDA driver; check the current command at https://pytorch.org/get-started/locally/ before installing it. The application works with CPU processing, although it will be slower.
+Registered users can create an account with their vehicle number, check the latest published traffic status, and view fines issued to their own vehicle. User password recovery requires the registered email address and vehicle number.
 
-Do not issue fines automatically. The fine-evidence screen is intentionally designed for an administrator to review and confirm AI evidence.
+## Getting started
 
-## Known limitations before deployment
+1. Open PowerShell in the project folder.
+2. Activate the included environment:
 
-- Live YOLO inference runs synchronously for each browser stream. Large or multiple concurrent clips can occupy the server; move inference to a background worker/service for production.
-- The current traffic-density value is an estimate based on YOLO vehicle counts, not calibrated physical road coverage.
-- `DEBUG=True`, the development secret key, SQLite, and the seeded demonstration accounts are suitable only for local coursework. Replace these and configure secure media storage before deployment.
-- Fine evidence remains human-reviewed. Plate numbers are not read automatically; add a validated OCR pipeline before any real enforcement workflow.
+   ```powershell
+   .\.venv\Scripts\Activate.ps1
+   ```
+
+3. Start the application:
+
+   ```powershell
+   python manage.py runserver
+   ```
+
+4. In a browser, open [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+
+To stop the application, return to PowerShell and press `Ctrl+C`.
+
+## Demo administrator access
+
+- Username: `Shreyas`
+- Password: `Shashank123`
+- Email for password recovery: `shreyas@test.com`
+- Administrator unique number: `011`
+
+## Typical workflow
+
+1. Sign in as an administrator.
+2. Open **Live Monitoring** and add one or more local road-video clips.
+3. Select a clip to view it, then run its analysis.
+4. Review the saved results on **Traffic reports** and the dashboard.
+5. If required, open **Fine evidence**, attach a supporting snapshot, and create a fine report for a registered vehicle.
+6. A registered user can sign in and check **Traffic status** or **Pending fines**.
+
+## Important note
+
+This is a coursework project. Traffic information and fine evidence should be reviewed by an administrator before any real-world action is taken.

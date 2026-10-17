@@ -24,6 +24,15 @@ class VehicleProfile(models.Model):
         self.vehicle_number = normalize_vehicle_number(self.vehicle_number) or None
         super().save(*args, **kwargs)
 
+
+class AdministratorProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="administrator_profile")
+    unique_number = models.CharField(max_length=32, unique=True)
+
+    def save(self, *args, **kwargs):
+        self.unique_number = (self.unique_number or "").strip()
+        super().save(*args, **kwargs)
+
 class AccessLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="accesses")
     accessed_at = models.DateTimeField(auto_now_add=True)

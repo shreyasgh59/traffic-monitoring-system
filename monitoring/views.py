@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.core.files.base import ContentFile
 from .analysis import AnalysisError, analyse_video, annotated_video_stream
 from .forms import FineReportForm, PasswordResetConfirmForm, PasswordResetLookupForm, RegistrationForm, VideoForm
-from .models import AccessLog, RegisteredVehicle, TrafficSummary, TrafficVideo, VideoAnalysis, VehicleProfile, Violation, ViolationEvidence, normalize_vehicle_number
+from .models import AccessLog, AdministratorProfile, RegisteredVehicle, TrafficSummary, TrafficVideo, VideoAnalysis, VehicleProfile, Violation, ViolationEvidence, normalize_vehicle_number
 
 DEFAULT_EVIDENCE_PLATES = ("KA01AB1234", "KA02AB1234", "KA03AB1234")
 
@@ -69,7 +69,19 @@ def reset_password(request):
 
     form = PasswordResetLookupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        user = User.objects.filter(email__iexact=form.cleaned_data["email"], vehicle_profile__vehicle_number=form.cleaned_data["vehicle_number"]).first()
+        email = form.cleaned_data["email"]
+        verification_number = form.cleaned_data["verification_number"]
+        if form.cleaned_data["account_type"] == "admin":
+            user = User.objects.filter(
+                email__iexact=email,
+                is_staff=True,
+                administrator_profile__unique_number=verification_number,
+            ).first()
+        else:
+            user = User.objects.filter(
+                email__iexact=email,
+                vehicle_profile__vehicle_number=verification_number,
+            ).first()
         if user:
             request.session["password_reset_user_id"] = user.pk
             return redirect("reset_password")

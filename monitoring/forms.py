@@ -29,11 +29,17 @@ class RegistrationForm(UserCreationForm):
 
 
 class PasswordResetLookupForm(forms.Form):
-    email = forms.EmailField()
-    vehicle_number = forms.CharField(max_length=32, label="Vehicle plate number")
+    ACCOUNT_TYPE_CHOICES = (("user", "Registered user"), ("admin", "Administrator"))
 
-    def clean_vehicle_number(self):
-        return normalize_vehicle_number(self.cleaned_data["vehicle_number"])
+    email = forms.EmailField()
+    account_type = forms.ChoiceField(choices=ACCOUNT_TYPE_CHOICES, label="Account type")
+    verification_number = forms.CharField(max_length=32, label="Verification number")
+
+    def clean_verification_number(self):
+        value = self.cleaned_data["verification_number"]
+        if self.cleaned_data.get("account_type") == "admin":
+            return value.strip()
+        return normalize_vehicle_number(value)
 
 
 class PasswordResetConfirmForm(forms.Form):
